@@ -6,7 +6,6 @@ function filterData() {
   console.log(enddate);
 }
 
-<script>
     async function fetchPitchData() {
         const url = 'https://compute.samford.edu/zohauth/clients/datajson/1';
         try {
@@ -48,4 +47,3 @@ function filterData() {
 
     // Fetch pitch data on page load
     window.onload = fetchPitchData;
-</script>
