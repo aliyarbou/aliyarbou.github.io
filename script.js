@@ -1,10 +1,24 @@
 function filterData() {
   event.preventDefault();
-  var startdate = document.getElementById("startdate").value;
-  var enddate = document.getElementById("enddate").value;
-  console.log(startdate);
-  console.log(enddate);
+  var startdate = new Date(document.getElementById("startdate").value);
+  var enddate = new Date(document.getElementById("enddate").value);
+
+  // Get all rows from the table
+  var tableRows = document.querySelectorAll("#pitch-table tbody tr");
+
+  tableRows.forEach(row => {
+      // Extract the date from the row
+      var pitchDate = new Date(row.cells[1].innerText); // Assuming the date is in the second cell (index 1)
+
+      // Check if the pitchDate is within the range
+      if (pitchDate >= startdate && pitchDate <= enddate) {
+          row.style.display = ""; // Show the row
+      } else {
+          row.style.display = "none"; // Hide the row
+      }
+  });
 }
+
 
     async function fetchPitchData() {
         const url = 'https://compute.samford.edu/zohauth/clients/datajson/1';
