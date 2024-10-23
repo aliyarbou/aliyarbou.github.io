@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Stats</title>
+    <style>
+        .blue {
+            color: #0C2340;
+        }
+        .red {
+            color: #BD1F2D;
+        }
+        th {
+            border-bottom: 1px solid gray;
+            cursor: pointer; /* Makes the header look clickable */
+        }
+        td {
+            text-align: center;
+        }
+        td.left {
+            text-align: left;
+        }
+        a {
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .sorted-asc::after {
+            content: " ▲"; /* Arrow for ascending sort */
+        }
+        .sorted-desc::after {
+            content: " ▼"; /* Arrow for descending sort */
+        }
+    </style>
+</head>
+<body>
+    <a href="answers.html">My Answers</a>
+    <h1 class="red">Trackman Pitch Stats Viewer</h1>
+    <form onsubmit="filterData();">
+        <label>Starting Date</label>
+        <input type="date" id="startdate" />
+        <label>Ending Date</label>
+        <input type="date" id="enddate" />
+        <button type="submit">Filter</button>
+    </form>
+    <table class="blue" id="pitch-table">
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)">PitchNo</th>
+                <th onclick="sortTable(1)">Date</th>
+                <th onclick="sortTable(2)">Time</th>
+                <th onclick="sortTable(3)">Batter</th>
+                <th onclick="sortTable(4)">Balls</th>
+                <th onclick="sortTable(5)">Strikes</th>
+                <th onclick="sortTable(6)">Outs</th>
+                <th onclick="sortTable(7)">PitchCall</th>
+                <th onclick="sortTable(8)">KorBB</th>
+                <th onclick="sortTable(9)">RelSpeed</th>
+                <th onclick="sortTable(10)">SpinRate</th>
+                <th onclick="sortTable(11)">SpinAxis</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be inserted here -->
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchPitchData() {
+            const url = 'https://compute.samford.edu/zohauth/clients/datajson/1';
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                displayPitchData(data);
+            } catch (error) {
+                console.error('There has been a problem with your fetch operation:', error);
+            }
+        }
+
+        function displayPitchData(data) {
+            const tableBody = document.querySelector('#pitch-table tbody');
+            tableBody.innerHTML = ''; // Clear existing data
+
+            // Assuming data is an array of pitch objects
+            data.forEach(pitch => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><a href="details.html?id=${pitch.PitchNo}">Pitch ${pitch.PitchNo}</a></td>
+                    <td>${pitch.Date || 'N/A'}</td>
+                    <td>${pitch.Time || 'N/A'}</td>
+                    <td>${pitch.Batter || 'N/A'}</td>
+                    <td>${pitch.Balls || 'N/A'}</td>
+                    <td>${pitch.Strikes || 'N/A'}</td>
+                    <td>${pitch.Outs || 'N/A'}</td>
+                    <td>${pitch.PitchCall || 'N/A'}</td>
+                    <td>${pitch.KorBB || 'N/A'}</td>
+                    <td>${pitch.RelSpeed || 'N/A'}</td>
+                    <td>${pitch.SpinRate || 'N/A'}</td>
+                    <td>${pitch.SpinAxis || 'N/A'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function filterData() {
+            event.preventDefault(); 
+            var startdate = new Date(document.getElementById("startdate").value);
+            var enddate = new Date(document.getElementById("enddate").value);
+
+            // Get all rows from the table
+            var tableRows = document.querySelectorAll("#pitch-table tbody tr");
+
+            tableRows.forEach(row => {
+                // Extract the date from the row
+                var pitchDate = new Date(row.cells[1].innerText); // Assuming the date is in the second cell (index 1)
+
+                // Check if the pitchDate is within the range
+                if (pitchDate >= startdate && pitchDate <= enddate) {
+                    row.style.display = ""; // Show the row
+                } else {
+                    row.style.display = "none"; // Hide the row
+                }
+            });
+        }
+
+        let currentSortColumn = null;
+        let currentSortOrder = 'asc';
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById("pitch-table");
+            const tbody = table.tBodies[0];
+            const rows = Array.from(tbody.rows);
+
+            // Remove sorting indicators
+            Array.from(table.querySelectorAll('th')).forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+
+            // Sort rows based on the specified column
+            const isAscending = currentSortColumn === columnIndex && currentSortOrder === 'asc';
+            rows.sort((rowA, rowB) => {
+                const cellA = rowA.cells[columnIndex].innerText;
+                const cellB = rowB.cells[columnIndex].innerText;
+
+                if (!isNaN(cellA) && !isNaN(cellB)) {
+                    return isAscending ? cellA - cellB : cellB - cellA; // Numeric sort
+                }
+                return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA); // Alphabetical sort
+            });
+
+            // Append sorted rows back to the table body
+            rows.forEach(row => tbody.appendChild(row));
+
+            // Update sorting indicators
+            currentSortColumn = columnIndex;
+            currentSortOrder = isAscending ? 'desc' : 'asc';
+            const header = table.rows[0].cells[columnIndex];
+            header.classList.add(isAscending ? 'sorted-asc' : 'sorted-desc');
+        }
+
+        // Fetch pitch data on page load
+        window.onload = fetchPitchData;
+    </script>
+</body>
+</html>
